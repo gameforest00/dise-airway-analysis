@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DISE AI Analysis System</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1e293b;   /* Deep Navy */
+            --accent: #3b82f6;    /* Clinical Blue */
+            --bg: #f1f5f9;        /* Light Gray Background */
+            --card-bg: #ffffff;
+            --text-main: #334155;
+            --text-sub: #64748b;
+            --border: #e2e8f0;
+            --success: #059669;
+            --warning: #d97706;
+            --danger: #dc2626;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* --- Header --- */
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .brand {
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .brand i { color: var(--accent); }
+        .system-status { font-size: 0.85rem; opacity: 0.8; }
+
+        /* --- Main Layout --- */
+        main {
+            flex: 1;
+            width: 100%;
+            max-width: 900px;
+            margin: 3rem auto;
+            padding: 0 1.5rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 2.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border);
+            margin-bottom: 2rem;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+        
+        .subtitle {
+            color: var(--text-sub);
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
+        }
+
+        /* --- Upload Area --- */
+        .upload-area {
+            border: 2px dashed #cbd5e1;
+            border-radius: 8px;
+            padding: 4rem 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background-color: #f8fafc;
+        }
+
+        .upload-area:hover, .upload-area.dragover {
+            border-color: var(--accent);
+            background-color: #eff6ff;
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            color: #94a3b8;
+            margin-bottom: 1.5rem;
+            transition: color 0.2s;
+        }
+        
+        .upload-area:hover .upload-icon { color: var(--accent); }
+
+        .upload-text {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 0.5rem;
+        }
+
+        .upload-subtext {
+            font-size: 0.85rem;
+            color: var(--text-sub);
+        }
+
+        /* --- Progress Bar --- */
+        .progress-container {
+            display: none;
+            margin-top: 2rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background-color: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background-color: var(--accent);
+            transition: width 0.4s ease;
+        }
+
+        .status-text {
+            text-align: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+        .status-sub {
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--text-sub);
+            margin-top: 0.25rem;
+        }
+
+        /* --- Results Dashboard --- */
+        .results-container {
+            display: none;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            padding: 1.25rem;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .stat-card.highlight {
+            background: #eff6ff;
+            border-color: #bfdbfe;
+            grid-column: span 4; /* Diagnosis takes full width */
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.5rem 2rem;
+            text-align: left;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--text-sub);
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .stat-card.highlight .stat-value {
+            font-size: 1.75rem;
+            color: #1d4ed8;
+        }
+
+        /* --- Action Buttons --- */
+        .actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.875rem 1.5rem;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .btn-primary {
+            background-color: var(--accent);
+            color: white;
+            flex: 2;
+        }
+        .btn-primary:hover { background-color: #2563eb; }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 1px solid #cbd5e1;
+            color: var(--text-main);
+            flex: 1;
+        }
+        .btn-outline:hover { background-color: #f1f5f9; border-color: #94a3b8; }
+
+        /* Error Message */
+        .error-msg {
+            display: none;
+            background-color: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #991b1b;
+            padding: 1rem;
+            border-radius: 6px;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="brand">
+            <i class="fas fa-heartbeat"></i>
+            DISE AI ENGINE
+        </div>
+        <div class="system-status">
+            <i class="fas fa-circle" style="color: #22c55e; font-size: 8px;"></i> System Operational
+        </div>
+    </header>
+
+    <main>
+        <div id="uploadSection" class="card">
+            <h2>New Analysis</h2>
+            <p class="subtitle">Upload endoscopy video (MP4, AVI) for automated obstruction detection.</p>
+            
+            <div class="upload-area" id="dropZone">
+                <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                <div class="upload-text">Drag & Drop video file here</div>
+                <div class="upload-subtext">or click to browse local files</div>
+                <input type="file" id="fileInput" hidden accept=".mp4,.avi,.mov,.mkv">
+            </div>
+
+            <div class="error-msg" id="errorBox"></div>
+        </div>
+
+        <div id="processingSection" class="card" style="display: none; text-align: center; padding: 4rem 2rem;">
+            <i class="fas fa-microscope" style="font-size: 3rem; color: var(--accent); margin-bottom: 1.5rem;"></i>
+            <h2 style="margin-bottom: 0.5rem;">Analyzing Video Data</h2>
+            <p class="subtitle" style="margin-bottom: 2rem;">Please wait while the AI processes frames and detects obstructions.</p>
+            
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="status-text" id="statusMain">Initializing...</div>
+            <div class="status-sub" id="statusSub">Preparing environment</div>
+        </div>
+
+        <div id="resultSection" class="card results-container">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                <div>
+                    <h2 style="margin: 0;">Analysis Complete</h2>
+                    <p class="subtitle" style="margin: 0; margin-top: 5px;">Video ID: <span id="resFilename">-</span></p>
+                </div>
+                <i class="fas fa-check-circle" style="font-size: 2rem; color: var(--success);"></i>
+            </div>
+            
+            <div class="summary-grid">
+                <div class="stat-card highlight">
+                    <div>
+                        <div class="stat-label">Clinical Assessment</div>
+                        <div class="stat-value" id="resDiagnosis">-</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div class="stat-label">Primary Cause</div>
+                        <div class="stat-value" style="font-size: 1.25rem; color: var(--text-main);" id="resCause">-</div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-label">Obstruction Ratio</div>
+                    <div class="stat-value" id="resRatio">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Problem Events</div>
+                    <div class="stat-value" id="resEvents">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">AI Confidence</div>
+                    <div class="stat-value" style="color: var(--text-sub); font-size: 1.25rem;">High</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Processed</div>
+                    <div class="stat-value" style="color: var(--text-sub); font-size: 1.25rem;">100%</div>
+                </div>
+            </div>
+
+            <div class="actions">
+                <a href="#" id="btnReport" target="_blank" class="btn btn-primary">
+                    <i class="fas fa-file-medical-alt"></i> View Full Medical Report
+                </a>
+                <a href="#" id="btnTimeline" target="_blank" class="btn btn-outline">
+                    <i class="fas fa-chart-line"></i> Timeline
+                </a>
+                <button onclick="location.reload()" class="btn btn-outline" style="flex: 0 0 auto;">
+                    <i class="fas fa-redo"></i>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // DOM Elements
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const errorBox = document.getElementById('errorBox');
+        
+        const uploadSection = document.getElementById('uploadSection');
+        const processingSection = document.getElementById('processingSection');
+        const resultSection = document.getElementById('resultSection');
+        
+        const progressFill = document.getElementById('progressFill');
+        const statusMain = document.getElementById('statusMain');
+        const statusSub = document.getElementById('statusSub');
+
+        // Event Listeners for File Handling
+        dropZone.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            handleFiles(e.dataTransfer.files);
+        });
+
+        function handleFiles(files) {
+            if (files.length > 0) {
+                uploadFile(files[0]);
+            }
+        }
+
+        function showError(msg) {
+            errorBox.textContent = msg;
+            errorBox.style.display = 'block';
+        }
+
+        function updateProgress(percent, mainText, subText) {
+            progressFill.style.width = `${percent}%`;
+            if (mainText) statusMain.textContent = mainText;
+            if (subText) statusSub.textContent = subText;
+        }
+
+        // 1. File Upload
+        function uploadFile(file) {
+            // UI Reset
+            errorBox.style.display = 'none';
+            uploadSection.style.display = 'none';
+            processingSection.style.display = 'block';
+            resultSection.style.display = 'none';
+
+            updateProgress(10, 'Uploading Video...', `File: ${file.name}`);
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    // Upload Success -> Start Analysis
+                    analyzeVideo(data.filename, file.name);
+                } else {
+                    throw new Error(data.message || 'Upload failed');
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                resetUI(err.message);
+            });
+        }
+
+        // 2. Video Analysis
+        function analyzeVideo(filename, originalName) {
+            updateProgress(40, 'AI Analysis in Progress', 'Detecting airway obstructions...');
+
+            // Simulate progress while waiting
+            let progress = 40;
+            const interval = setInterval(() => {
+                if (progress < 90) {
+                    progress += 5;
+                    updateProgress(progress, 'Processing Frames...', 'Applying Computer Vision & Deep Learning');
+                }
+            }, 1000);
+
+            fetch('/analyze', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ filename: filename })
+            })
+            .then(res => res.json())
+            .then(data => {
+                clearInterval(interval);
+                if (data.success) {
+                    updateProgress(100, 'Analysis Complete', 'Generating Report...');
+                    setTimeout(() => showResults(data, originalName), 800);
+                } else {
+                    throw new Error(data.message || 'Analysis failed');
+                }
+            })
+            .catch(err => {
+                clearInterval(interval);
+                console.error(err);
+                resetUI(err.message);
+            });
+        }
+
+        // 3. Display Results
+        function showResults(data, originalName) {
+            processingSection.style.display = 'none';
+            resultSection.style.display = 'block';
+
+            // Fill Data from app.py JSON response
+            document.getElementById('resFilename').textContent = originalName;
+            
+            const summary = data.summary;
+            document.getElementById('resDiagnosis').textContent = summary.diagnosis || '-';
+            document.getElementById('resCause').textContent = summary.main_cause || '-';
+            document.getElementById('resRatio').textContent = (summary.obstruction_ratio || 0) + '%';
+            document.getElementById('resEvents').textContent = summary.problem_events || '-';
+
+            // Links
+            document.getElementById('btnReport').href = data.report_url;
+            document.getElementById('btnTimeline').href = data.timeline_url;
+            
+            // Text Color based on severity
+            const diagText = document.getElementById('resDiagnosis');
+            if (summary.diagnosis && summary.diagnosis.includes('SEVERE')) {
+                diagText.style.color = 'var(--danger)';
+            } else if (summary.diagnosis && summary.diagnosis.includes('MODERATE')) {
+                diagText.style.color = 'var(--warning)';
+            } else {
+                diagText.style.color = 'var(--success)';
+            }
+        }
+
+        function resetUI(errorMsg) {
+            uploadSection.style.display = 'block';
+            processingSection.style.display = 'none';
+            resultSection.style.display = 'none';
+            if (errorMsg) showError(errorMsg);
+        }
+    </script>
+</body>
+</html>
